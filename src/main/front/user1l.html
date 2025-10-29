@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test - Zvonok Chat</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+<h1>Zvonok Chat Test</h1>
+<div id="status"></div>
+<button onclick="sendChannelMessage()">Отправить в канал</button>
+<button onclick="sendPrivateMessage()">Отправить личное</button>
+
+<script>
+    let stompClient = null;
+    const token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ1c2VyMSIsInVzZXJJZCI6MSwiaWF0IjoxNzYxNzA4Njc5LCJleHAiOjE3NjE3MjA2Nzl9.-xCCwa-f--piZkfyZw1eonlvioLubzwZBYif4ylrHx3pBu44KTUeHW8Us24lp1C3ASjrOLLxVVqzYWcuCGQvOw";
+
+    function updateStatus(message, isError = false) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.style.color = isError ? 'red' : 'green';
+        statusDiv.innerHTML = new Date().toLocaleTimeString() + ': ' + message;
+        console.log(message);
+    }
+
+    function connect() {
+        updateStatus('Подключение к WebSocket...');
+
+        const socket = new SockJS(`http://localhost:8080/api/ws?token=${token}`);
+        stompClient = Stomp.over(socket);
+
+        // Добавляем детальное логирование
+        stompClient.debug = function(str) {
+            console.log('STOMP:', str);
+        };
+
+        stompClient.connect({}, function (frame) {
+            console.log('✅ Подключение успешно:', frame);
+            updateStatus('✅ Подключен к WebSocket');
+
+            // Подписка на личные сообщения
+            stompClient.subscribe("/user/queue/messages", function(messageFrame) {
+                console.log('📨 Получено личное сообщение:', messageFrame.body);
+                try {
+                    const chatMessage = JSON.parse(messageFrame.body);
+                    updateStatus(`💬 От ${chatMessage.senderUsername}: ${chatMessage.content}`);
+                } catch (error) {
+                    console.error("Ошибка парсинга личного сообщения:", error);
+                }
+            });
+
+            // Подписка на групповые сообщения
+            stompClient.subscribe("/topic/room.3", function(messageFrame) {
+                console.log('🏠 Получено групповое сообщение:', messageFrame.body);
+                try {
+                    const chatMessage = JSON.parse(messageFrame.body);
+                    updateStatus(`🏠 От ${chatMessage.senderUsername}: ${chatMessage.content}`);
+                } catch (error) {
+                    console.error("Ошибка парсинга группового сообщения:", error);
+                }
+            });
+
+            // Подписка на сообщения канала
+            stompClient.subscribe("/topic/channel.7", function(messageFrame) {
+                console.log('📢 Получено сообщение канала:', messageFrame.body);
+                try {
+                    const chatMessage = JSON.parse(messageFrame.body);
+                    updateStatus(`📢 От ${chatMessage.senderUsername}: ${chatMessage.content}`);
+                } catch (error) {
+                    console.error("Ошибка парсинга сообщения канала:", error);
+                }
+            });
+
+        }, function (error) {
+            console.error('❌ Ошибка подключения:', error);
+            updateStatus('❌ Ошибка подключения: ' + error, true);
+            setTimeout(connect, 3000);
+        });
+    }
+
+    function sendPrivateMessage() {
+        if (stompClient && stompClient.connected) {
+            console.log('📤 Отправляю личное сообщение...');
+            updateStatus('📤 Отправляю личное сообщение...');
+
+            // ===== ИСПРАВЛЯЕМ ENDPOINT =====
+            stompClient.send("/app/private/user2", {}, "Привет! Это личное сообщение!");
+        } else {
+            updateStatus('❌ Не подключен к WebSocket', true);
+        }
+    }
+
+    function sendGroupMessage() {
+        if (stompClient && stompClient.connected) {
+            console.log('📤 Отправляю групповое сообщение...');
+            updateStatus('📤 Отправляю групповое сообщение...');
+
+            // ===== ИСПРАВЛЯЕМ ENDPOINT =====
+            stompClient.send("/app/group/3", {}, "Привет! Это групповое сообщение!");
+        } else {
+            updateStatus('❌ Не подключен к WebSocket', true);
+        }
+    }
+
+    function sendChannelMessage() {
+        if (stompClient && stompClient.connected) {
+            console.log('📤 Отправляю сообщение в канал...');
+            updateStatus('📤 Отправляю сообщение в канал...');
+
+            // ===== ИСПРАВЛЯЕМ ENDPOINT =====
+            stompClient.send("/app/channel/7", {}, "Привет! Это сообщение в канал!");
+        } else {
+            updateStatus('❌ Не подключен к WebSocket', true);
+        }
+    }
+
+    // Автоподключение
+    connect();
+
+    // Автоматическая отправка сообщения через 7 секунд для теста
+    // setTimeout(() => {
+    //     if (stompClient && stompClient.connected) {
+    //         sendChannelMessage();
+    //     } else {
+    //         console.log('Не подключен для автоматической отправки');
+    //     }
+    // }, 7000);
+</script>
+</body>
+</html>

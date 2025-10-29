@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<body>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebSocket Test - Zvonok Chat</title>
+<!-- Подключаем SockJS и STOMP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+<script>
+    let stompClient = null;
+    const token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ1c2VyMiIsInVzZXJJZCI6MiwiaWF0IjoxNzYxNzA4OTEzLCJleHAiOjE3NjE3MjA5MTN9.OsYVq48P7bE9rUK86gV40XbYin4t1SnZTGilFpqixiPtn5qvaNM3F3Sleyq8wIVsqzEayEUFnPvieWgJ1xMixQ";
+
+    function connect() {
+        const socket = new SockJS(`http://localhost:8080/api/ws?token=${token}`)
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function (frame) {
+            console.log(`подключение: ${frame}`);
+
+            stompClient.subscribe("/user/queue/messages", (messageFrame) => {
+                console.log(`Получил сообщение: ${messageFrame.body}`);
+
+                try {
+                    const chatMessage = JSON.parse(messageFrame.body);
+                    console.log(chatMessage)
+                } catch (error) {
+                    console.log("Ошибка парсинга: ", error);
+                }
+            })
+
+            stompClient.subscribe("/topic/room.3", (messageFrame) => {
+                console.log(`Получил сообщение: ${messageFrame.body}`);
+
+                try {
+                    const chatMessage = JSON.parse(messageFrame.body);
+                    console.log(chatMessage)
+                } catch (error) {
+                    console.log("Ошибка парсинга: ", error);
+                }
+            })
+
+            stompClient.subscribe("/topic/channel.7", (messageFrame) => {
+                console.log(`Получил сообщение: ${messageFrame.body}`);
+
+                try {
+                    const chatMessage = JSON.parse(messageFrame.body);
+                    console.log(chatMessage)
+                } catch (error) {
+                    console.log("Ошибка парсинга: ", error);
+                }
+            })
+        }, function (error) {
+            console.error(`ошибка подключения: ${error}`);
+            setTimeout(connect, 3000)
+        });
+    }
+
+        function sendPrivateMessage() {
+        stompClient.send("/app/private/user1", {}, "привет!")
+        }
+
+        function sendGroupMessage(groupId) {
+            stompClient.send(`/app/group/room.${groupId}`, {}, "привет!")
+        }
+
+        function sendChannelMessage() {
+            stompClient.send(`/app/channel/7`, {}, "привет!")
+
+        }
+    connect();
+    setTimeout(sendChannelMessage, 5000)
+</script>
+<head/>
+</body>
+</html>

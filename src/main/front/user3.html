@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<body>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebSocket Test - Zvonok Chat</title>
+<!-- Подключаем SockJS и STOMP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+<script>
+    let stompClient = null;
+    const token = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ1c2VyMyIsImlhdCI6MTc2MTAwNDk3MywiZXhwIjoxNzYxMDE2OTczfQ.2ABuTjqdAOfrKf8uQP1gg4r3uJXt3o6p4RqM3zlSsgPOsuLXArwHSw-SXSo31W8Wm07m17CjIx1pCz_2mIL9nQ";
+
+    function connect() {
+        const socket = new SockJS(`http://localhost:8080/api/ws?token=${token}`)
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function (frame) {
+            console.log(`подключение: ${frame}`);
+
+            stompClient.subscribe("/user/queue/messages", (messageFrame) => {
+                console.log(`Получил сообщение: ${messageFrame.body}`);
+
+                try {
+                    const chatMessage = JSON.parse(messageFrame.body);
+                    console.log(chatMessage)
+                } catch (error) {
+                    console.log("Ошибка парсинга: ", error);
+                }
+            })
+
+            stompClient.subscribe("/topic/room.3", (messageFrame) => {
+                console.log(`Получил сообщение: ${messageFrame.body}`);
+
+                try {
+                    const chatMessage = JSON.parse(messageFrame.body);
+                    console.log(chatMessage)
+                } catch (error) {
+                    console.log("Ошибка парсинга: ", error);
+                }
+            })
+        }, function (error) {
+            console.error(`ошибка подключения: ${error}`);
+            setTimeout(connect, 3000)
+        });
+    }
+
+    function sendPrivateMessage() {
+        stompClient.send("/app/private/user2", {}, "привет!")
+    }
+
+    function sendGroupMessage() {
+        stompClient.send("/app/group/3", {}, "привет всем парни!")
+    }
+
+    connect();
+    setTimeout(sendPrivateMessage, 5000)
+    setTimeout(sendGroupMessage, 8000)
+</script>
+<head/>
+</body>
+</html>
