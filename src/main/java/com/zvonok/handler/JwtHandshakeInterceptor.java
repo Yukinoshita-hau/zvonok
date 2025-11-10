@@ -28,17 +28,13 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
         String token = extractToken(request);
 
-        log.warn("-----TOKEN-----{}", token);
-
         if (token != null && token.matches("^.+\\..+\\..+$") && jwtTokenProvider.isValidToken(token)) {
             String username = jwtTokenProvider.getUsername(token);
             attributes.put("username", username);
             attributes.put("token", token);
-            log.info("WebSocket: Пользователь {} подключаеться", username);
             return true;
         }
 
-        log.warn("WebSocket: Отклонено подключение без валидного JWT токена {}", token);
         return false;
     }
 
@@ -50,8 +46,6 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
         if (exception != null) {
             log.error("WebSocket handshake failed", exception);
-        } else {
-            log.debug("WebSocket handshake completed successfully for: {}", request.getURI());
         }
     }
 
@@ -63,9 +57,7 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
             String[] params = query.split("&");
             for (String param : params) {
                 if (param.startsWith("token=")) {
-                    String token = param.substring(6);
-                    log.debug("Token extracted from query parameter");
-                    return token;
+                    return param.substring(6);
                 }
             }
         }
@@ -73,15 +65,12 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
         // Способ 2: Из заголовка Authorization
         String authHeader = request.getHeaders().getFirst("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            log.debug("Token extracted from Authorization header");
-            return token;
+            return authHeader.substring(7);
         }
 
         // Способ 3: Из кастомного заголовка X-Auth-Token или там какой придумаем (на случай если Authorization недоступен)
         String tokenHeader = request.getHeaders().getFirst("X-Auth-Token");
         if (tokenHeader != null && !tokenHeader.isEmpty()) {
-            log.debug("Token extracted from X-Auth-Token header");
             return tokenHeader;
         }
 

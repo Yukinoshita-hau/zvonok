@@ -2,6 +2,8 @@ package com.zvonok.model;
 
 import com.zvonok.exception.RedefinitionException;
 import com.zvonok.exception_handler.enumeration.HttpResponseMessage;
+import com.zvonok.service.dto.Permission;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,10 +33,10 @@ public class FolderPermissionOverride {
     private User user;
 
     @Column(nullable = false)
-    private Long allowedPermissions = 0L; // Что разрешено в этой папке
+    private Long allowedPermissions = Permission.NOTHING.getValue(); // Что разрешено в этой папке
 
     @Column(nullable = false)
-    private Long deniedPermissions = 0L; // Что запрещено в этой папке
+    private Long deniedPermissions = Permission.NOTHING.getValue(); // Что запрещено в этой папке
 
     private LocalDateTime createdAt;
 

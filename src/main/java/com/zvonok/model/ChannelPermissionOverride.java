@@ -1,5 +1,8 @@
 package com.zvonok.model;
 
+import com.zvonok.exception.PermissionOverrideTargetMissingException;
+import com.zvonok.exception_handler.enumeration.BusinessRuleMessage;
+import com.zvonok.service.dto.Permission;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,10 +32,10 @@ public class ChannelPermissionOverride {
     private User user;
 
     @Column(nullable = false)
-    private Long allowedPermissions = 0L;
+    private Long allowedPermissions = Permission.NOTHING.getValue();
 
     @Column(nullable = false)
-    private Long deniedPermissions = 0L;
+    private Long deniedPermissions = Permission.NOTHING.getValue();
 
     private LocalDateTime createdAt;
 
@@ -41,7 +44,8 @@ public class ChannelPermissionOverride {
     private void validateOverride() {
         // Должен быть либо role, либо user, но не оба
         if ((role == null && user == null) || (role != null && user != null)) {
-            throw new IllegalStateException("Должна быть либо роль, либо пользователь");
+            throw new PermissionOverrideTargetMissingException(
+                    BusinessRuleMessage.BUSINESS_PERMISSION_OVERRIDE_TARGET_REQUIRED_MESSAGE.getMessage());
         }
     }
 }

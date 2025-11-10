@@ -10,5 +10,4 @@ public class CreateUserDto {
 
     private String password;
 
-    private String displayName;
 }

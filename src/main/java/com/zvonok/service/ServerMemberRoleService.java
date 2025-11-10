@@ -7,14 +7,19 @@ import com.zvonok.model.ServerMemberRole;
 import com.zvonok.model.ServerRole;
 import com.zvonok.repository.ServerMemberRoleRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
+/**
+ * Service for managing relationships between server members and roles.
+ * Сервис для управления связями между участниками сервера и ролями.
+ */
 @RequiredArgsConstructor
 @Service
-@Slf4j
 public class ServerMemberRoleService {
 
     private final ServerMemberRoleRepository serverMemberRoleRepository;
@@ -22,32 +27,75 @@ public class ServerMemberRoleService {
     private final ServerRoleService serverRoleService;
     private final UserService userService;
 
+    /** Получает связь участника сервера с ролью по ID. */
     public ServerMemberRole getServerMemberRole(Long serverMemberRoleId) {
-        return serverMemberRoleRepository.findById(serverMemberRoleId).orElseThrow(() -> new ServerMemberRoleNotFoundException(HttpResponseMessage.HTTP_SERVER_MEMBER_ROLE_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
+        return serverMemberRoleRepository.findById(serverMemberRoleId)
+                .orElseThrow(() -> new ServerMemberRoleNotFoundException(
+                        HttpResponseMessage.HTTP_SERVER_MEMBER_ROLE_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
-    public ServerMemberRole crateServerMemberRole(Long serverMemberId, Long serverRoleId , Long assignedById) {
+    /**
+     * Создает связь между участником сервера и ролью.
+     * Получает участника и роль по их ID и записывает, кто назначил роль.
+     */
+    public ServerMemberRole createServerMemberRole(Long serverMemberId, Long serverRoleId, Long assignedById) {
         ServerMember member = serverMemberService.getServerMember(serverMemberId);
         ServerRole role = serverRoleService.getServerRole(serverRoleId);
 
-        ServerMemberRole serverMemberRole = new ServerMemberRole();
+        if (hasRoleAssigned(member.getId(), role.getId())) {
+            return serverMemberRoleRepository.findByMemberIdAndRoleId(member.getId(), role.getId()).get();
+        }
 
+        ServerMemberRole serverMemberRole = new ServerMemberRole();
         serverMemberRole.setMember(member);
         serverMemberRole.setRole(role);
         serverMemberRole.setAssignedAt(LocalDateTime.now());
         serverMemberRole.setAssignedBy(userService.getUser(assignedById));
 
-        return serverMemberRoleRepository.save(serverMemberRole);
+        ServerMemberRole saved = serverMemberRoleRepository.save(serverMemberRole);
+        member.getMemberRoles().add(saved);
+        return saved;
     }
 
-    public ServerMemberRole crateServerMemberRole(ServerMember member, ServerRole role, Long assignedById) {
-        ServerMemberRole serverMemberRole = new ServerMemberRole();
+    /**
+     * Создает связь между участником сервера и ролью.
+     * Сущности участника и роли предоставляются напрямую.
+     */
+    public ServerMemberRole createServerMemberRole(ServerMember member, ServerRole role, Long assignedById) {
+        if (hasRoleAssigned(member.getId(), role.getId())) {
+            return serverMemberRoleRepository.findByMemberIdAndRoleId(member.getId(), role.getId()).get();
+        }
 
+        ServerMemberRole serverMemberRole = new ServerMemberRole();
         serverMemberRole.setMember(member);
         serverMemberRole.setRole(role);
         serverMemberRole.setAssignedAt(LocalDateTime.now());
         serverMemberRole.setAssignedBy(userService.getUser(assignedById));
 
-        return serverMemberRoleRepository.save(serverMemberRole);
+        ServerMemberRole saved = serverMemberRoleRepository.save(serverMemberRole);
+        member.getMemberRoles().add(saved);
+        return saved;
+    }
+
+    /** Удаляет роль у участника сервера. */
+    @Transactional
+    public void removeRoleFromMember(Long memberId, Long roleId) {
+        ServerMemberRole memberRole = serverMemberRoleRepository.findByMemberIdAndRoleId(memberId, roleId)
+                .orElseThrow(() -> new ServerMemberRoleNotFoundException(
+                        HttpResponseMessage.HTTP_SERVER_MEMBER_ROLE_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
+        memberRole.getMember().getMemberRoles().removeIf(mr -> mr.getId().equals(memberRole.getId()));
+        serverMemberRoleRepository.delete(memberRole);
+    }
+
+    /** Получает список ролей участника (идентификаторы ролей). */
+    public List<Long> getMemberRoleIds(Long memberId) {
+        return serverMemberRoleRepository.findByMemberId(memberId).stream()
+                .map(memberRole -> memberRole.getRole().getId())
+                .collect(Collectors.toList());
+    }
+
+    /** Проверяет, назначена ли роль участнику. */
+    public boolean hasRoleAssigned(Long memberId, Long roleId) {
+        return serverMemberRoleRepository.findByMemberIdAndRoleId(memberId, roleId).isPresent();
     }
 }

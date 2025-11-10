@@ -11,8 +11,8 @@ import java.util.List;
 public class ServerMemberResponse {
     private Long userId;
     private String username;
-    private String displayName;
     private String avatarUrl;
+    private String nickname;
     private LocalDateTime joinedAt;
     private List<String> roles;
     private Boolean isOwner;

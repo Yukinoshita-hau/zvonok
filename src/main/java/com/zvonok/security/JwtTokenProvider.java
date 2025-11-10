@@ -57,6 +57,22 @@ public class JwtTokenProvider {
         }
     }
 
+    public Long getUserId(String token) {
+        Claims claims = getClaims(token);
+        Object userIdClaim = claims.get("userId");
+        if (userIdClaim instanceof Integer) {
+            return ((Integer) userIdClaim).longValue();
+        }
+        if (userIdClaim instanceof Long) {
+            return (Long) userIdClaim;
+        }
+        return null;
+    }
+
+    public long getJwtExpirationMs() {
+        return jwtExpirationMs;
+    }
+
     private Claims getClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())

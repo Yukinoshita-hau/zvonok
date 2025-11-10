@@ -10,10 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ChannelPermissionOverrideRepository extends JpaRepository<ChannelPermissionOverride, Long> {
-    // Поиск переопределения для конкретного пользователя в канале
     Optional<ChannelPermissionOverride> findByChannelIdAndUserId(Long channelId, Long userId);
 
-    // Поиск переопределения для конкретной роли в канале
     Optional<ChannelPermissionOverride> findByChannelIdAndRoleId(Long channelId, Long roleId);
 
     // Поиск всех переопределений ролей в канале
@@ -25,13 +23,10 @@ public interface ChannelPermissionOverrideRepository extends JpaRepository<Chann
     List<ChannelPermissionOverride> findByChannelIdAndRoleIn(@Param("channelId") Long channelId,
                                                              @Param("roles") List<ServerRole> roles);
 
-    // Все переопределения для канала
     List<ChannelPermissionOverride> findByChannelId(Long channelId);
 
-    // Удалить все переопределения роли
     void deleteByRoleId(Long roleId);
 
-    // Удалить все переопределения пользователя в канале
     void deleteByChannelIdAndUserId(Long channelId, Long userId);
 
 }

@@ -33,6 +33,9 @@ public class ServerMember {
 
     private Long personalPermissions = Permission.NOTHING.getValue();
 
+    @Column(length = 32)
+    private String nickname;
+
     private Boolean isActive = true;
 
     private LocalDateTime joinedAt;

@@ -11,7 +11,6 @@ public class ChannelMessageResponse {
     private Long id;
     private String content;
     private String senderUsername;
-    private String senderDisplayName;
     private Long senderId;
     private LocalDateTime sentAt;
     private MessageType messageType;

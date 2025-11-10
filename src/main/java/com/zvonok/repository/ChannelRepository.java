@@ -11,4 +11,5 @@ public interface ChannelRepository extends JpaRepository<Channel, Long> {
     List<Channel> findByFolderIdAndIsActiveTrue(Long folderId);
     List<Channel> findByFolderIdOrderByPosition(Long folderId);
     long countByFolderIdAndIsActiveTrue(Long folderId);
+    Optional<Channel> findByIdAndFolderId(Long channelId, Long folderId);
 }

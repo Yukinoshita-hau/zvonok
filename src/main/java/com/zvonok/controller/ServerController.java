@@ -1,18 +1,16 @@
 package com.zvonok.controller;
 
-import com.zvonok.exception.ServerNotFoundException;
-import com.zvonok.exception_handler.enumeration.HttpResponseMessage;
 import com.zvonok.model.User;
 import com.zvonok.security.dto.UserPrincipal;
 import com.zvonok.service.ServerService;
 import com.zvonok.service.UserService;
 import com.zvonok.service.dto.request.CreateServerRequest;
 import com.zvonok.service.dto.request.UpdateServerRequest;
+import com.zvonok.service.dto.request.UpdateServerMemberNicknameRequest;
 import com.zvonok.service.dto.response.ServerResponse;
 import com.zvonok.service.dto.response.ServerMemberResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,7 +22,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/server")
 @RequiredArgsConstructor
-@Slf4j
 public class ServerController {
 
     private final ServerService serverService;
@@ -38,7 +35,6 @@ public class ServerController {
             @Valid @RequestBody CreateServerRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
         Long userId = getCurrentUserId(principal);
-        log.warn("_________{} -- {}", principal.getUsername(), userId);
         ServerResponse response = serverService.createServer(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -144,6 +140,31 @@ public class ServerController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Обновление ника участника
+     */
+    @PatchMapping("/{serverId}/members/{targetUserId}/nickname")
+    public ResponseEntity<ServerMemberResponse> updateMemberNickname(
+            @PathVariable Long serverId,
+            @PathVariable Long targetUserId,
+            @Valid @RequestBody UpdateServerMemberNicknameRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        Long userId = getCurrentUserId(principal);
+        ServerMemberResponse response = serverService.updateMemberNickname(serverId, targetUserId, request.getNickname(), userId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Удаление сервера
+     */
+    @DeleteMapping("/{serverId}")
+    public ResponseEntity<Void> deleteServer(
+            @PathVariable Long serverId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        Long userId = getCurrentUserId(principal);
+        serverService.deleteServer(serverId, userId);
+        return ResponseEntity.noContent().build();
+    }
 
     private Long getCurrentUserId(UserPrincipal principal) {
         User user = userService.getUser(principal.getUsername());

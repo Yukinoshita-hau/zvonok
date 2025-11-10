@@ -3,6 +3,8 @@ package com.zvonok.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.zvonok.model.enumeration.UserStatus;
+import com.zvonok.model.FriendRequest;
+import com.zvonok.model.Friendship;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -35,9 +37,6 @@ public class User {
     @Column(nullable = false, length = 100) @JsonIgnore
     private String password;
 
-    @Column(nullable = false, length = 50)
-    private String displayName;
-
     @Enumerated(EnumType.STRING)
     private UserStatus status = UserStatus.OFFLINE;
 
@@ -58,4 +57,24 @@ public class User {
 
     @OneToMany(mappedBy = "sender") @JsonBackReference
     private List<Message> sentMessage;
+
+    @OneToMany(mappedBy = "sender")
+    @JsonIgnore
+    private List<FriendRequest> sentFriendRequests;
+
+    @OneToMany(mappedBy = "receiver")
+    @JsonIgnore
+    private List<FriendRequest> receivedFriendRequests;
+
+    @OneToMany(mappedBy = "userOne")
+    @JsonIgnore
+    private List<Friendship> friendshipsInitiated;
+
+    @OneToMany(mappedBy = "userTwo")
+    @JsonIgnore
+    private List<Friendship> friendshipsReceived;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<RefreshToken> refreshTokens;
 }

@@ -1,5 +1,6 @@
 package com.zvonok.service;
 
+import com.zvonok.exception.InsufficientPermissionsException;
 import com.zvonok.exception.RoomNotFoundException;
 import com.zvonok.exception.RoomSizeMaxTenMembersException;
 import com.zvonok.exception.UserNotFoundException;
@@ -11,12 +12,17 @@ import com.zvonok.repository.RoomRepository;
 import com.zvonok.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service for managing private and group chat rooms.
+ * Сервис для управления приватными и групповыми чат-комнатами.
+ */
 @Service
 @RequiredArgsConstructor
 public class RoomService {
@@ -24,22 +30,39 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
 
+    /** Получает комнату по ID. */
     public Room getRoom(Long id) {
-        Optional<Room> optionalRoom = roomRepository.findById(id);
-
-        if (optionalRoom.isPresent()) {
-            return optionalRoom.get();
-        } else {
-            throw new RoomNotFoundException(HttpResponseMessage.HTTP_ROOM_NOT_FOUND_RESPONSE_MESSAGE.getMessage());
-        }
+        return roomRepository.findById(id)
+                .orElseThrow(() -> new RoomNotFoundException(
+                        HttpResponseMessage.HTTP_ROOM_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
+    /**
+     * Creates or retrieves an existing private room between two users.
+     * If a private room already exists between the users, it is returned.
+     * Otherwise, a new private room is created.
+     *
+     * Создает или получает существующую приватную комнату между двумя пользователями.
+     * Если приватная комната уже существует между пользователями, она возвращается.
+     * В противном случае создается новая приватная комната.
+     *
+     * @param username1  the username of the first user
+     *                   имя пользователя первого пользователя
+     * @param username2  the username of the second user
+     *                   имя пользователя второго пользователя
+     * @return Room entity (existing or newly created)
+     *         сущность Room (существующая или вновь созданная)
+     * @throws UserNotFoundException if either user does not exist
+     *                               если один из пользователей не существует
+     */
     public Room createOrGetPrivateRoom(String username1, String username2) {
         User user1 = userRepository.findByUsername(username1)
-                .orElseThrow(() -> new UserNotFoundException(HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
+                .orElseThrow(() -> new UserNotFoundException(
+                        HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
 
         User user2 = userRepository.findByUsername(username2)
-                .orElseThrow(() -> new UserNotFoundException(HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
+                .orElseThrow(() -> new UserNotFoundException(
+                        HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
 
         Optional<Room> existingRoom = findPrivateRoomBetweenUsers(user1.getId(), user2.getId());
         if (existingRoom.isPresent()) {
@@ -47,7 +70,7 @@ public class RoomService {
         }
 
         Room room = new Room();
-        // у приватных рум небудет названия
+        // У приватных комнат нет названия (name = null), так как это приватная комната
         room.setName(null);
         room.setType(RoomType.PRIVATE);
         room.setIsActive(true);
@@ -57,12 +80,32 @@ public class RoomService {
         return roomRepository.save(room);
     }
 
-    public Room createGroupRoom(String creatorUsername,
-                            String roomName,
-                            List<String> roomMemberUsernames) {
-
+    /**
+     * Creates a new group room with specified members.
+     * The creator is automatically added to the room if not already in the member list.
+     * Group rooms can have a maximum of 10 members.
+     *
+     * Создает новую групповую комнату с указанными участниками.
+     * Создатель автоматически добавляется в комнату, если его еще нет в списке участников.
+     * Групповые комнаты могут содержать максимум 10 участников.
+     *
+     * @param creatorUsername      the username of the user creating the room
+     *                             имя пользователя, создающего комнату
+     * @param roomName             the name of the group room
+     *                             название групповой комнаты
+     * @param roomMemberUsernames  list of usernames to add as members
+     *                             список имен пользователей для добавления в качестве участников
+     * @return the created Room entity
+     *         созданная сущность Room
+     * @throws UserNotFoundException         if creator or any member does not exist
+     *                                       если создатель или любой участник не существует
+     * @throws RoomSizeMaxTenMembersException if the number of members exceeds 10
+     *                                        если количество участников превышает 10
+     */
+    public Room createGroupRoom(String creatorUsername, String roomName, List<String> roomMemberUsernames) {
         User creator = userRepository.findByUsername(creatorUsername)
-                .orElseThrow(() -> new UserNotFoundException(HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
+                .orElseThrow(() -> new UserNotFoundException(
+                        HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
 
         List<User> members = userRepository.findAllByUsernameIn(roomMemberUsernames);
 
@@ -71,7 +114,8 @@ public class RoomService {
         }
 
         if (members.size() > 10) {
-            throw new RoomSizeMaxTenMembersException(HttpResponseMessage.HTTP_ROOM_SIZE_MAX_TEN_MEMBERS_RESPONSE_MESSAGE.getMessage());
+            throw new RoomSizeMaxTenMembersException(
+                    HttpResponseMessage.HTTP_ROOM_SIZE_MAX_TEN_MEMBERS_RESPONSE_MESSAGE.getMessage());
         }
 
         Room room = new Room();
@@ -88,16 +132,35 @@ public class RoomService {
         return roomRepository.findPrivateRoomBetweenUsers(user1, user2);
     }
 
+    /** Получает все активные комнаты, участником которых является пользователь. */
     public List<Room> getUserRooms(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException(HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
+                .orElseThrow(() -> new UserNotFoundException(
+                        HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
 
         return roomRepository.findAllByMembersContainingAndIsActiveTrue(user);
     }
 
+    /**
+     * Allows a user to leave a room.
+     * If the room becomes empty after the user leaves, it is marked as inactive.
+     *
+     * Позволяет пользователю покинуть комнату.
+     * Если комната становится пустой после ухода пользователя, она помечается как неактивная.
+     *
+     * @param username  the username of the user leaving the room
+     *                  имя пользователя, покидающего комнату
+     * @param roomId    the unique identifier of the room
+     *                  уникальный идентификатор комнаты
+     * @throws UserNotFoundException if user with the given username does not exist
+     *                               если пользователь с указанным именем не существует
+     * @throws RoomNotFoundException if room with the given ID does not exist
+     *                               если комната с указанным идентификатором не существует
+     */
     public void leaveRoom(String username, long roomId) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException(HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
+                .orElseThrow(() -> new UserNotFoundException(
+                        HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
 
         Room room = getRoom(roomId);
 
@@ -107,6 +170,57 @@ public class RoomService {
             room.setIsActive(false);
         }
 
+        roomRepository.save(room);
+    }
+
+    /**
+     * Обновляет данные комнаты.
+     * Updates room data.
+     */
+    @Transactional
+    public Room updateRoom(Long roomId, String username, String newName) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(
+                        HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
+
+        Room room = getRoom(roomId);
+
+        // Проверяем, что пользователь является участником комнаты
+        boolean isMember = room.getMembers().stream()
+                .anyMatch(member -> member.getId().equals(user.getId()));
+        if (!isMember) {
+            throw new InsufficientPermissionsException("Пользователь не является участником комнаты");
+        }
+
+        if (newName != null && !newName.isEmpty()) {
+            room.setName(newName);
+        }
+
+        return roomRepository.save(room);
+    }
+
+    /**
+     * Удаляет комнату (помечает как неактивную и удаляет всех участников).
+     * Deletes a room (marks as inactive and removes all members).
+     */
+    @Transactional
+    public void deleteRoom(Long roomId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(
+                        HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
+
+        Room room = getRoom(roomId);
+
+        // Проверяем, что пользователь является участником комнаты
+        boolean isMember = room.getMembers().stream()
+                .anyMatch(member -> member.getId().equals(user.getId()));
+        if (!isMember) {
+            throw new InsufficientPermissionsException("Пользователь не является участником комнаты");
+        }
+
+        // Помечаем комнату как неактивную и очищаем участников
+        room.setIsActive(false);
+        room.getMembers().clear();
         roomRepository.save(room);
     }
 }

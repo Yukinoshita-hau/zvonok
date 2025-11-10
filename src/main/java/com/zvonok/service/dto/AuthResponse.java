@@ -1,12 +1,19 @@
 package com.zvonok.service.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-@AllArgsConstructor
 public class AuthResponse {
 
-    private String token;
-    private String type;
+    private String accessToken;
+    private String refreshToken;
+    private String tokenType;
+    private long expiresIn;
+
+    public AuthResponse(String accessToken, String refreshToken, String tokenType, long expiresIn) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        this.tokenType = tokenType;
+        this.expiresIn = expiresIn;
+    }
 }

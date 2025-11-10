@@ -4,18 +4,21 @@ import com.zvonok.exception.ChannelNotFoundException;
 import com.zvonok.exception_handler.enumeration.HttpResponseMessage;
 import com.zvonok.model.Channel;
 import com.zvonok.model.ChannelFolder;
-import com.zvonok.model.enumeration.ChannelType;
 import com.zvonok.repository.ChannelFolderRepository;
 import com.zvonok.repository.ChannelRepository;
 import com.zvonok.service.dto.CreateChannelDto;
-import com.zvonok.service.dto.CreateChannelFolderDto;
-import com.zvonok.service.dto.CreateServerRoleDto;
+import com.zvonok.service.dto.UpdateChannelDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
+/**
+ * Service for managing channels within channel folders.
+ * Сервис для управления каналами в папках каналов.
+ */
 @RequiredArgsConstructor
 @Service
 public class ChannelService {
@@ -23,25 +26,89 @@ public class ChannelService {
     private final ChannelRepository channelRepository;
     private final ChannelFolderRepository folderRepository;
 
+    /** Получает канал по ID. */
     public Channel getChannel(long id) {
-        return channelRepository.findById(id).orElseThrow(() -> new ChannelNotFoundException(HttpResponseMessage.HTTP_CHANNEL_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
+        return channelRepository.findById(id)
+                .orElseThrow(() -> new ChannelNotFoundException(
+                        HttpResponseMessage.HTTP_CHANNEL_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
+    /** Получает все активные каналы в указанной папке. */
     public List<Channel> getChannelsByFolderId(Long folderId) {
         return channelRepository.findByFolderIdAndIsActiveTrue(folderId);
     }
 
-    public Channel createChannel(CreateChannelDto createChannelFolderDto) {
-        ChannelFolder folder = folderRepository.findById(createChannelFolderDto.getFolderId()).orElseThrow(() -> new ChannelNotFoundException(HttpResponseMessage.HTTP_CHANNEL_FOLDER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
+    /**
+     * Создает новый канал в папке.
+     * Проверяет существование папки перед созданием канала.
+     */
+    public Channel createChannel(CreateChannelDto createChannelDto) {
+        ChannelFolder folder = folderRepository.findById(createChannelDto.getFolderId())
+                .orElseThrow(() -> new ChannelNotFoundException(
+                        HttpResponseMessage.HTTP_CHANNEL_FOLDER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
 
-        Channel generalChannel = new Channel();
-        generalChannel.setName(createChannelFolderDto.getName());
-        generalChannel.setFolder(folder);
-        generalChannel.setType(createChannelFolderDto.getType());
-        generalChannel.setPosition(createChannelFolderDto.getPosition());
-        generalChannel.setTopic(createChannelFolderDto.getTopic());
-        generalChannel.setCreatedAt(LocalDateTime.now());
+        Channel channel = new Channel();
+        channel.setName(createChannelDto.getName());
+        channel.setFolder(folder);
+        channel.setType(createChannelDto.getType());
+        channel.setPosition(createChannelDto.getPosition());
+        channel.setTopic(createChannelDto.getTopic());
+        channel.setCreatedAt(LocalDateTime.now());
+        channel.setUserLimit(createChannelDto.getUserLimit());
 
-        return channelRepository.save(generalChannel);
+        return channelRepository.save(channel);
+    }
+
+    /** Обновляет существующий канал. */
+    public Channel updateChannel(Long channelId, UpdateChannelDto updateChannelDto) {
+        Channel channel = getChannel(channelId);
+
+        if (updateChannelDto.getName() != null) {
+            channel.setName(updateChannelDto.getName());
+        }
+        if (updateChannelDto.getType() != null) {
+            channel.setType(updateChannelDto.getType());
+        }
+        if (updateChannelDto.getPosition() != null) {
+            channel.setPosition(updateChannelDto.getPosition());
+        }
+        if (updateChannelDto.getUserLimit() != null) {
+            channel.setUserLimit(updateChannelDto.getUserLimit());
+        }
+        if (updateChannelDto.getSlowModeSeconds() != null) {
+            channel.setSlowModeSeconds(updateChannelDto.getSlowModeSeconds());
+        }
+        if (updateChannelDto.getTopic() != null) {
+            channel.setTopic(updateChannelDto.getTopic());
+        }
+        if (updateChannelDto.getNsfw() != null) {
+            channel.setNsfw(updateChannelDto.getNsfw());
+        }
+        if (updateChannelDto.getActive() != null) {
+            channel.setIsActive(updateChannelDto.getActive());
+        }
+
+        return channelRepository.save(channel);
+    }
+
+    /** Помечает канал как удаленный (неактивный). */
+    public void deleteChannel(Long channelId) {
+        Channel channel = getChannel(channelId);
+        channel.setIsActive(false);
+        channelRepository.save(channel);
+    }
+
+    /** Получает канал по ID и ID папки. */
+    public Channel getChannel(Long folderId, Long channelId) {
+        return channelRepository.findByIdAndFolderId(channelId, folderId)
+                .orElseThrow(() -> new ChannelNotFoundException(
+                        HttpResponseMessage.HTTP_CHANNEL_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
+    }
+
+    /** Получает все активные каналы, отсортированные по позиции для папки. */
+    public List<Channel> getChannelsOrdered(Long folderId) {
+        return channelRepository.findByFolderIdOrderByPosition(folderId).stream()
+                .filter(Channel::getIsActive)
+                .collect(Collectors.toList());
     }
 }
