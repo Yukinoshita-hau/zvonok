@@ -21,6 +21,7 @@ public enum HttpResponseMessage {
     HTTP_CANNOT_ADD_SELF_AS_FRIEND_RESPONSE_MESSAGE("You cannot add yourself as a friend"),
     HTTP_FRIENDSHIP_ALREADY_EXISTS_RESPONSE_MESSAGE("Users are already friends"),
     HTTP_FRIENDSHIP_NOT_FOUND_RESPONSE_MESSAGE("Friendship was not found"),
+    
     // Channel
     HTTP_CHANNEL_NOT_FOUND_RESPONSE_MESSAGE("Channel was not found"),
 

@@ -33,6 +33,5 @@ build/
 .vscode/
 src/main/resources/
 .cursorignore
-./src/main/resources/application.properties/
 front/
-resources/
+src/
