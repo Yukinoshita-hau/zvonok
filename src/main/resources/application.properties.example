@@ -1,0 +1,19 @@
+spring.application.name=zvonok
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.globally_quoted_identifiers=true
+spring.datasource.url=jdbc:postgresql://localhost:5432/zvonok
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+spring.jpa.show-sql=true
+
+server.servlet.context-path=/api
+
+#app.jwt.secret = myVeryLongAndSecureSecretKeyThatHasAtLeast32CharactersForHS512Algorithm123456789
+app.jwt.secret = your_jwt_secret_key_here
+
+app.jwt.ExpirationMs = 12000000
+app.jwt.refreshExpirationMs = 1209600000
+
+logging.level.com.zvonok = DEBUG
+logging.level.org.springframework.security=DEBUG
+
