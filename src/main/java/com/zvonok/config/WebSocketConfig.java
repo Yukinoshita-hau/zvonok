@@ -26,10 +26,18 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // С SockJS (для браузеров)
         registry.addEndpoint("/ws")
                 .setHandshakeHandler(jwtHandshakeHandler)
                 .addInterceptors(jwtHandshakeInterceptor)
-                .setAllowedOrigins("http://localhost:63342")
+                .setAllowedOrigins("*")
                 .withSockJS();
-    }
+    
+        // БЕЗ SockJS (для Postman)
+        registry.addEndpoint("/ws-raw")
+                .setHandshakeHandler(jwtHandshakeHandler)
+                .addInterceptors(jwtHandshakeInterceptor)
+                .setAllowedOrigins("*");
+
+    } 
 }

@@ -33,17 +33,12 @@ public class ChannelFolderService {
         this.serverService = serverService;
     }
 
-    /** Получает папку каналов по ID. */
     public ChannelFolder getChannelFolder(Long id) {
         return folderRepository.findById(id)
                 .orElseThrow(() -> new ChannelNotFoundException(
                         HttpResponseMessage.HTTP_CHANNEL_FOLDER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
-    /**
-     * Создает новую папку каналов в сервере.
-     * Проверяет существование сервера перед созданием папки.
-     */
     public ChannelFolder createChannelFolder(CreateChannelFolderDto createChannelFolderDto) {
         // Проверяем существование сервера через ServerService
         Server server = serverService.getServer(createChannelFolderDto.getServerId());
@@ -57,19 +52,16 @@ public class ChannelFolderService {
         return folderRepository.save(folder);
     }
 
-    /** Получает все активные папки для сервера. */
     public List<ChannelFolder> getActiveChannelFolders(Long serverId) {
         return folderRepository.findByServerIdAndIsActiveTrueOrderByPosition(serverId);
     }
 
-    /** Проверяет, принадлежит ли папка указанному серверу. */
     public ChannelFolder getChannelFolderForServer(Long serverId, Long folderId) {
         return folderRepository.findByIdAndServerId(folderId, serverId)
                 .orElseThrow(() -> new ChannelNotFoundException(
                         HttpResponseMessage.HTTP_CHANNEL_FOLDER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
-    /** Обновляет существующую папку каналов. */
     @Transactional
     public ChannelFolder updateChannelFolder(Long folderId, UpdateChannelFolderDto updateChannelFolderDto) {
         ChannelFolder folder = getChannelFolder(folderId);
@@ -90,7 +82,6 @@ public class ChannelFolderService {
         return folderRepository.save(folder);
     }
 
-    /** Помечает папку каналов и ее каналы как неактивные. */
     @Transactional
     public void deleteChannelFolder(Long folderId) {
         ChannelFolder folder = getChannelFolder(folderId);

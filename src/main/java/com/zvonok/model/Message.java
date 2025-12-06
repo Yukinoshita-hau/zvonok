@@ -48,23 +48,14 @@ public class Message {
     @Column(nullable = false)
     private LocalDateTime sentAt;
     
-    /**
-     * Проверяет, было ли сообщение отредактировано
-     */
     public boolean isEdited() {
         return editedAt != null;
     }
     
-    /**
-     * Проверяет, было ли сообщение удалено
-     */
     public boolean isDeleted() {
         return deletedAt != null;
     }
     
-    /**
-     * Валидация: либо room, либо channel должен быть заполнен (но не оба)
-     */
     @PrePersist
     @PreUpdate
     private void validate() {

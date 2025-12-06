@@ -1,6 +1,6 @@
 package com.zvonok.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.zvonok.model.enumeration.RoomType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -30,12 +30,13 @@ public class Room {
 
     private Boolean isActive = true;
 
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
     @ManyToMany @JoinTable(
             name = "room_members",
             joinColumns = @JoinColumn(name = "room_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
+    @JsonIgnore
     private List<User> members;
 }

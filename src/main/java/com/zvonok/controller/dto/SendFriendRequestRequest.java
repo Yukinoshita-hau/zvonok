@@ -1,12 +1,12 @@
 package com.zvonok.controller.dto;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class SendFriendRequestRequest {
 
-    @NotNull(message = "Receiver id must be provided")
-    private Long receiverId;
+    @NotBlank(message = "Receiver username must be provided")
+    private String receiverUsername;
 }
 

@@ -40,19 +40,10 @@ public interface ServerMemberRepository extends JpaRepository<ServerMember, Long
         AND mr.role.id = :roleId
         """)
     boolean hasRole(@Param("memberId") Long memberId, @Param("roleId") Long roleId);
-    /**
-     * Количество активных участников на сервере
-     */
     long countByServerIdAndIsActiveTrue(Long serverId);
 
-    /**
-     * Все активные участники сервера
-     */
     List<ServerMember> findByServerIdAndIsActiveTrue(Long serverId);
 
-    /**
-     * Проверить является ли пользователь владельцем сервера
-     */
     @Query("""
         SELECT COUNT(s) > 0 FROM Server s 
         WHERE s.owner.id = :userId 

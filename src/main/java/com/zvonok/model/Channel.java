@@ -1,6 +1,7 @@
 package com.zvonok.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.zvonok.model.enumeration.ChannelType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -30,6 +31,7 @@ public class Channel {
     private String name;
 
     @OneToMany(mappedBy = "channel")
+    @JsonIgnore
     private List<Message> messages;
 
     @Enumerated(EnumType.STRING)
@@ -41,6 +43,7 @@ public class Channel {
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "channel")
+    @JsonIgnore
     private List<ChannelPermissionOverride> permissionOverrides;
 
     private Integer position = 0;

@@ -27,9 +27,6 @@ public class ServerController {
     private final ServerService serverService;
     private final UserService userService;
 
-    /**
-     * Создание нового сервера
-     */
     @PostMapping("/create")
     public ResponseEntity<ServerResponse> createServer(
             @Valid @RequestBody CreateServerRequest request,
@@ -39,9 +36,6 @@ public class ServerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * Получение серверов пользователя
-     */
     @GetMapping("/my")
     public ResponseEntity<List<ServerResponse>> getMyServers(
             @AuthenticationPrincipal UserPrincipal principal) {
@@ -50,9 +44,6 @@ public class ServerController {
         return ResponseEntity.ok(servers);
     }
 
-    /**
-     * Получение информации о сервере
-     */
     @GetMapping("/{serverId}")
     public ResponseEntity<ServerResponse> getServer(
             @PathVariable Long serverId,
@@ -66,9 +57,6 @@ public class ServerController {
         return ResponseEntity.ok(server);
     }
 
-    /**
-     * Присоединение к серверу по invite коду
-     */
     @PostMapping("/join/{inviteCode}")
     public ResponseEntity<ServerResponse> joinServer(
             @PathVariable String inviteCode,
@@ -78,9 +66,6 @@ public class ServerController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Обновление сервера
-     */
     @PutMapping("/{serverId}")
     public ResponseEntity<ServerResponse> updateServer(
             @PathVariable Long serverId,
@@ -91,9 +76,6 @@ public class ServerController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Регенерация invite кода
-     */
     @PostMapping("/{serverId}/regenerate-invite")
     public ResponseEntity<Map<String, String>> regenerateInviteCode(
             @PathVariable Long serverId,
@@ -103,9 +85,6 @@ public class ServerController {
         return ResponseEntity.ok(Map.of("inviteCode", newInviteCode));
     }
 
-    /**
-     * Покинуть сервер
-     */
     @PostMapping("/{serverId}/leave")
     public ResponseEntity<Void> leaveServer(
             @PathVariable Long serverId,
@@ -115,9 +94,6 @@ public class ServerController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Получение участников сервера
-     */
     @GetMapping("/{serverId}/members")
     public ResponseEntity<List<ServerMemberResponse>> getServerMembers(
             @PathVariable Long serverId,
@@ -127,9 +103,6 @@ public class ServerController {
         return ResponseEntity.ok(members);
     }
 
-    /**
-     * Исключение участника
-     */
     @DeleteMapping("/{serverId}/members/{targetUserId}")
     public ResponseEntity<Void> kickMember(
             @PathVariable Long serverId,
@@ -140,9 +113,6 @@ public class ServerController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Обновление ника участника
-     */
     @PatchMapping("/{serverId}/members/{targetUserId}/nickname")
     public ResponseEntity<ServerMemberResponse> updateMemberNickname(
             @PathVariable Long serverId,
@@ -154,9 +124,6 @@ public class ServerController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Удаление сервера
-     */
     @DeleteMapping("/{serverId}")
     public ResponseEntity<Void> deleteServer(
             @PathVariable Long serverId,

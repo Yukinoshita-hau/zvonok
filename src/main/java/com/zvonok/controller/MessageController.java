@@ -18,17 +18,11 @@ public class MessageController {
 
     private final MessageService messageService;
 
-    /**
-     * Получение сообщения по ID
-     */
     @GetMapping("/{messageId}")
     public ResponseEntity<Message> getMessage(@PathVariable Long messageId) {
         return ResponseEntity.ok(messageService.getMessage(messageId));
     }
 
-    /**
-     * Редактирование сообщения
-     */
     @PutMapping("/{messageId}")
     public ResponseEntity<MessageResponse> updateMessage(
             @PathVariable Long messageId,
@@ -38,9 +32,6 @@ public class MessageController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Удаление сообщения
-     */
     @DeleteMapping("/{messageId}")
     public ResponseEntity<Void> deleteMessage(
            @PathVariable Long messageId,

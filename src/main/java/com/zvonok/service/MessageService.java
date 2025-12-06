@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Service for managing messages in private rooms, group rooms, and channels.
@@ -39,11 +40,9 @@ public class MessageService {
     private final ChannelService channelService;
     private final PermissionService permissionService;
 
-    /**
-     * Отправляет приватное сообщение между двумя пользователями.
-     * Создает или получает приватную комнату, сохраняет сообщение и отправляет его через WebSocket.
-     */
     public MessageResponse sendPrivateMessage(String senderUsername, String receiverUsername, String content) {
+        log.info("📤 Sending private message from {} to {}: {}", senderUsername, receiverUsername, content);
+        
         Room privateRoom = roomService.createOrGetPrivateRoom(senderUsername, receiverUsername);
         User sender = userService.getUser(senderUsername);
 
@@ -51,29 +50,31 @@ public class MessageService {
         boolean isMember = privateRoom.getMembers().stream()
                 .anyMatch(member -> member.getId().equals(sender.getId()));
         if (!isMember) {
+            log.error("❌ User {} is not a member of the private room", senderUsername);
             throw new InsufficientPermissionsException(
                     BusinessRuleMessage.BUSINESS_USER_NOT_MEMBER_PRIVATE_ROOM_MESSAGE.getMessage());
         }
 
         Message message = createMessage(sender, content, privateRoom, null);
         Message savedMessage = messageRepository.save(message);
+        log.info("💾 Message saved with id: {}", savedMessage.getId());
 
         MessageResponse response = mapToMessageResponse(savedMessage, privateRoom.getId());
         response.setEventType(EventType.MESSAGE);
 
-        privateRoom.getMembers().forEach(member -> messagingTemplate.convertAndSendToUser(
-                member.getUsername(),
-                "/queue/messages",
-                response
-        ));
+        privateRoom.getMembers().forEach(member -> {
+            log.info("📨 Sending message to user: {}", member.getUsername());
+            messagingTemplate.convertAndSendToUser(
+                    member.getUsername(),
+                    "/queue/messages",
+                    response
+            );
+        });
 
+        log.info("✅ Private message sent successfully");
         return response;
     }
 
-    /**
-     * Отправляет сообщение в групповую комнату.
-     * Сохраняет сообщение и транслирует его всем участникам через WebSocket.
-     */
     public MessageResponse sendGroupMessage(String senderUsername, long roomId, String content) {
         Room groupRoom = roomService.getRoom(roomId);
         User sender = userService.getUser(senderUsername);
@@ -97,12 +98,6 @@ public class MessageService {
         return response;
     }
 
-    /**
-     * Отправляет сообщение в канал.
-     * Проверяет права пользователя, сохраняет сообщение и транслирует его через WebSocket.
-     *
-     * @throws InsufficientPermissionsException если у пользователя нет права отправлять сообщения
-     */
     public ChannelMessageResponse sendChannelMessage(String senderUsername, Long channelId, String content) {
         try {
             User sender = userService.getUser(senderUsername);
@@ -130,10 +125,6 @@ public class MessageService {
         }
     }
 
-    /**
-     * Редактирует существующее сообщение.
-     * Только отправитель может редактировать свое сообщение.
-     */
     @Transactional
     public MessageResponse editMessage(Long messageId, String senderUsername, String newContent) {
         Message message = messageRepository.findById(messageId)
@@ -176,10 +167,6 @@ public class MessageService {
         return response;
     }
 
-    /**
-     * Удаляет сообщение (soft delete).
-     * Только отправитель или администратор может удалить сообщение.
-     */
     @Transactional
     public void deleteMessage(Long messageId, String username) {
         Message message = messageRepository.findById(messageId)
@@ -220,9 +207,6 @@ public class MessageService {
         }
     }
 
-    /**
-     * Получает сообщение по ID.
-     */
     public Message getMessage(Long messageId) {
         return messageRepository.findById(messageId)
                 .orElseThrow(() -> new MessageNotFoundException(
@@ -231,11 +215,20 @@ public class MessageService {
                                 messageId)));
     }
 
+    public List<MessageResponse> getPrivateMessages(String currentUsername, Long friendId) {
+        Room privateRoom = roomService.getPrivateRoomIfExists(currentUsername, friendId);
+        if (privateRoom == null) {
+            return List.of();
+        }
+        
+        return messageRepository.findByRoomIdAndDeletedAtIsNullOrderBySentAtAsc(privateRoom.getId())
+                .stream()
+                .map(message -> mapToMessageResponse(message, privateRoom.getId()))
+                .toList();
+    }
+
     // ===== PRIVATE HELPER METHODS =====
 
-    /**
-     * Создает новое сообщение с заданными параметрами.
-     */
     private Message createMessage(User sender, String content, Room room, Channel channel) {
         Message message = new Message();
         message.setSender(sender);
@@ -250,9 +243,6 @@ public class MessageService {
         return message;
     }
 
-    /**
-     * Преобразует Message в MessageResponse для комнат.
-     */
     private MessageResponse mapToMessageResponse(Message message, Long roomId) {
         MessageResponse response = new MessageResponse();
         response.setId(message.getId());
@@ -264,9 +254,6 @@ public class MessageService {
         return response;
     }
 
-    /**
-     * Преобразует Message в ChannelMessageResponse для каналов.
-     */
     private ChannelMessageResponse mapToChannelMessageResponse(Message message, Channel channel) {
         ChannelMessageResponse response = new ChannelMessageResponse();
         response.setId(message.getId());

@@ -37,13 +37,6 @@ public class ServerRoleController {
     private final PermissionService permissionService;
     private final UserService userService;
 
-    /**
-     * Возвращает активные роли сервера, отсортированные по позиции.
-     *
-     * @param serverId   идентификатор сервера
-     * @param principal  текущий пользователь
-     * @return список ролей
-     */
     @GetMapping
     public ResponseEntity<List<ServerRole>> getServerRoles(
             @PathVariable Long serverId,
@@ -57,14 +50,6 @@ public class ServerRoleController {
         return ResponseEntity.ok(roles);
     }
 
-    /**
-     * Создаёт новую роль на сервере.
-     *
-     * @param serverId идентификатор сервера
-     * @param request  параметры роли
-     * @param principal текущий пользователь
-     * @return созданная роль
-     */
     @PostMapping
     public ResponseEntity<ServerRole> createServerRole(
             @PathVariable Long serverId,
@@ -90,15 +75,6 @@ public class ServerRoleController {
         return ResponseEntity.status(HttpStatus.CREATED).body(role);
     }
 
-    /**
-     * Обновляет свойства роли (название, цвет, позицию, права).
-     *
-     * @param serverId  идентификатор сервера
-     * @param roleId    идентификатор роли
-     * @param request   данные для обновления
-     * @param principal текущий пользователь
-     * @return обновлённая роль
-     */
     @PutMapping("/{roleId}")
     public ResponseEntity<ServerRole> updateServerRole(
             @PathVariable Long serverId,
@@ -123,14 +99,6 @@ public class ServerRoleController {
         return ResponseEntity.ok(updated);
     }
 
-    /**
-     * Помечает роль как неактивную (soft delete).
-     *
-     * @param serverId  идентификатор сервера
-     * @param roleId    идентификатор роли
-     * @param principal текущий пользователь
-     * @return пустой ответ {@code 204}
-     */
     @DeleteMapping("/{roleId}")
     public ResponseEntity<Void> deleteServerRole(
             @PathVariable Long serverId,

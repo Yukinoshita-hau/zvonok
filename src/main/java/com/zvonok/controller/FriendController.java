@@ -59,7 +59,8 @@ public class FriendController {
             @Valid @RequestBody SendFriendRequestRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
         User currentUser = getCurrentUser(principal);
-        FriendRequest friendRequest = friendService.sendFriendRequest(currentUser.getId(), request.getReceiverId());
+        User receiver = userService.getUser(request.getReceiverUsername());
+        FriendRequest friendRequest = friendService.sendFriendRequest(currentUser.getId(), receiver.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(toFriendRequestResponse(friendRequest));
     }
 

@@ -1,5 +1,6 @@
 package com.zvonok.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -38,6 +39,7 @@ public class Server {
     private User owner;
 
     @OneToMany(mappedBy = "server")
+    @JsonIgnore
     private List<ServerMember> members;
 
     @OneToMany(mappedBy = "server")
@@ -45,5 +47,6 @@ public class Server {
     private List<ChannelFolder> channelFolders;
 
     @OneToMany(mappedBy = "server")
+    @JsonIgnore
     private List<ServerRole> roles;
 }

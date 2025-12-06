@@ -1,6 +1,7 @@
 package com.zvonok.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -32,6 +33,7 @@ public class ChannelFolder {
     private List<Channel> channels;
 
     @OneToMany(mappedBy = "folder")
+    @JsonIgnore
     private List<FolderPermissionOverride> permissionOverrides;
 
     private Integer position = 0; // Порядок отображения папок

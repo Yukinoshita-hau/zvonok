@@ -32,15 +32,6 @@ public class ServerMemberRoleController {
     private final PermissionService permissionService;
     private final UserService userService;
 
-    /**
-     * Назначает участнику сервера указанную роль.
-     *
-     * @param serverId   идентификатор сервера
-     * @param memberId   идентификатор участника
-     * @param roleId     идентификатор роли
-     * @param principal  текущий пользователь
-     * @return пустой ответ {@code 204}
-     */
     @PostMapping("/{roleId}")
     public ResponseEntity<Void> assignRoleToMember(
             @PathVariable Long serverId,
@@ -58,15 +49,6 @@ public class ServerMemberRoleController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Снимает роль с участника сервера.
-     *
-     * @param serverId   идентификатор сервера
-     * @param memberId   идентификатор участника
-     * @param roleId     идентификатор роли
-     * @param principal  текущий пользователь
-     * @return пустой ответ {@code 204}
-     */
     @DeleteMapping("/{roleId}")
     public ResponseEntity<Void> removeRoleFromMember(
             @PathVariable Long serverId,

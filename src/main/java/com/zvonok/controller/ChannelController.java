@@ -37,14 +37,6 @@ public class ChannelController {
     private final UserService userService;
     private final ServerService serverService;
 
-    /**
-     * Возвращает активные каналы папки, отсортированные по позиции.
-     *
-     * @param serverId   идентификатор сервера
-     * @param folderId   идентификатор папки
-     * @param principal  текущий пользователь (проверяется право просмотра)
-     * @return список каналов
-     */
     @GetMapping
     public ResponseEntity<List<Channel>> getChannels(
             @PathVariable Long serverId,
@@ -60,15 +52,6 @@ public class ChannelController {
         return ResponseEntity.ok(channels);
     }
 
-    /**
-     * Создаёт новый канал внутри папки.
-     *
-     * @param serverId        идентификатор сервера
-     * @param folderId        идентификатор папки
-     * @param createChannelDto параметры нового канала
-     * @param principal       текущий пользователь
-     * @return созданный канал
-     */
     @PostMapping
     public ResponseEntity<Channel> createChannel(
             @PathVariable Long serverId,
@@ -86,16 +69,6 @@ public class ChannelController {
         return ResponseEntity.status(HttpStatus.CREATED).body(channel);
     }
 
-    /**
-     * Обновляет свойства канала (имя, тип, позиция, тему и др.).
-     *
-     * @param serverId         идентификатор сервера
-     * @param folderId         идентификатор папки
-     * @param channelId        идентификатор канала
-     * @param updateChannelDto данные для обновления
-     * @param principal        текущий пользователь
-     * @return обновлённый канал
-     */
     @PutMapping("/{channelId}")
     public ResponseEntity<Channel> updateChannel(
             @PathVariable Long serverId,
@@ -114,15 +87,6 @@ public class ChannelController {
         return ResponseEntity.ok(updated);
     }
 
-    /**
-     * Помечает канал как удалённый (isActive=false).
-     *
-     * @param serverId   идентификатор сервера
-     * @param folderId   идентификатор папки
-     * @param channelId  идентификатор канала
-     * @param principal  текущий пользователь
-     * @return пустой ответ со статусом {@code 204}
-     */
     @DeleteMapping("/{channelId}")
     public ResponseEntity<Void> deleteChannel(
             @PathVariable Long serverId,

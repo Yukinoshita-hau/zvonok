@@ -22,10 +22,6 @@ public class InviteCodeService {
     private static final int CODE_LENGTH = 15;
     private final SecureRandom random = new SecureRandom();
 
-    /**
-     * Генерирует уникальный код приглашения, которого нет в базе данных.
-     * Генерирует коды до тех пор, пока не будет найден уникальный.
-     */
     public String generateUniqueInviteCode() {
         String code;
         do {
@@ -35,11 +31,6 @@ public class InviteCodeService {
         return code;
     }
 
-    /**
-     * Генерирует случайный код приглашения.
-     * Использует безопасный генератор случайных чисел и буквенно-цифровые символы
-     * (исключая неоднозначные символы: 0, O, I, l).
-     */
     public String generateRandomCode() {
         StringBuilder code = new StringBuilder(CODE_LENGTH);
         for (int i = 0; i < CODE_LENGTH; i++) {

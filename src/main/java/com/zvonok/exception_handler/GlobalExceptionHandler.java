@@ -57,9 +57,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, status);
     }
 
-    /**
-     * Обработчик ошибок валидации (@Valid аннотации)
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<JsonErrorResponse> handleValidationErrors(MethodArgumentNotValidException e) {
         String errorMessage = e.getBindingResult().getAllErrors().stream()

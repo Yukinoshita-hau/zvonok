@@ -8,6 +8,8 @@ import com.zvonok.exception_handler.enumeration.HttpResponseMessage;
 import com.zvonok.model.User;
 import com.zvonok.security.JwtTokenProvider;
 import com.zvonok.service.dto.AuthResponse;
+import com.zvonok.service.dto.CreateUserDto;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,30 +31,10 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
 
-    /**
-     * Registers a new user in the system.
-     * Validates username and email uniqueness, encrypts password, and generates JWT token.
-     *
-     * Регистрирует нового пользователя в системе.
-     * Проверяет уникальность имени пользователя и email, шифрует пароль и генерирует JWT токен.
-     *
-     * @param username     the username for the new user
-     *                     имя пользователя для нового пользователя
-     * @param email        the email address for the new user
-     *                     адрес электронной почты для нового пользователя
-     * @param password     the plain text password (will be encrypted)
-     *                     пароль в открытом виде (будет зашифрован)
-     * @return AuthResponse containing the JWT token and token type
-     *         ответ, содержащий JWT токен и тип токена
-     * @throws UserWIthThisUsernameAlreadyExistException if username already exists
-     *                                                   если имя пользователя уже существует
-     * @throws UserWithThisEmailAlreadyExistException    if email already exists
-     *                                                   если email уже существует
-     */
     public AuthResponse register(String username, String email, String password) {
         // UserService.createUser уже проверяет уникальность email и username
         // Создаем пользователя через UserService с зашифрованным паролем
-        com.zvonok.service.dto.CreateUserDto userDto = new com.zvonok.service.dto.CreateUserDto();
+        CreateUserDto userDto = new CreateUserDto();
         userDto.setUsername(username);
         userDto.setEmail(email);
         userDto.setPassword(passwordEncoder.encode(password));
@@ -61,28 +43,9 @@ public class AuthService {
         return buildAuthResponse(savedUser);
     }
 
-    /**
-     * Authenticates a user and generates a JWT token.
-     * Validates username and password, updates last seen timestamp.
-     * For security reasons, if either username or password is incorrect, a generic error is thrown.
-     *
-     * Аутентифицирует пользователя и генерирует JWT токен.
-     * Проверяет имя пользователя и пароль, обновляет время последнего посещения.
-     * В целях безопасности, если имя пользователя или пароль неверны, выбрасывается общая ошибка.
-     *
-     * @param username  the username to authenticate
-     *                  имя пользователя для аутентификации
-     * @param password  the plain text password to verify
-     *                  пароль в открытом виде для проверки
-     * @return AuthResponse containing the JWT token and token type
-     *         ответ, содержащий JWT токен и тип токена
-     * @throws InvalidUserOrPasswordException if username doesn't exist or password is incorrect
-     *                                        если имя пользователя не существует или пароль неверен
-     */
     public AuthResponse login(String usernameOrEmail, String password) {
         // Для безопасности не указываем, что именно неверно (username или password)
-        User user;
-        user = userService.getUserByUsernameOrEmail(usernameOrEmail);
+        User user = userService.getUserByUsernameOrEmail(usernameOrEmail);
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new InvalidUserOrPasswordException(

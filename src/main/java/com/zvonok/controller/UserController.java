@@ -22,6 +22,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getUser(id));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<User> searchUserByUsername(@RequestParam String username) {
+        return ResponseEntity.ok(userService.getUser(username));
+    }
+
     @PostMapping("/")
     public ResponseEntity<User> createUser(@Valid @RequestBody CreateUserDto userDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(userDto));

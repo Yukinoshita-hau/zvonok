@@ -27,17 +27,12 @@ public class ServerMemberRoleService {
     private final ServerRoleService serverRoleService;
     private final UserService userService;
 
-    /** Получает связь участника сервера с ролью по ID. */
     public ServerMemberRole getServerMemberRole(Long serverMemberRoleId) {
         return serverMemberRoleRepository.findById(serverMemberRoleId)
                 .orElseThrow(() -> new ServerMemberRoleNotFoundException(
                         HttpResponseMessage.HTTP_SERVER_MEMBER_ROLE_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
-    /**
-     * Создает связь между участником сервера и ролью.
-     * Получает участника и роль по их ID и записывает, кто назначил роль.
-     */
     public ServerMemberRole createServerMemberRole(Long serverMemberId, Long serverRoleId, Long assignedById) {
         ServerMember member = serverMemberService.getServerMember(serverMemberId);
         ServerRole role = serverRoleService.getServerRole(serverRoleId);
@@ -57,10 +52,6 @@ public class ServerMemberRoleService {
         return saved;
     }
 
-    /**
-     * Создает связь между участником сервера и ролью.
-     * Сущности участника и роли предоставляются напрямую.
-     */
     public ServerMemberRole createServerMemberRole(ServerMember member, ServerRole role, Long assignedById) {
         if (hasRoleAssigned(member.getId(), role.getId())) {
             return serverMemberRoleRepository.findByMemberIdAndRoleId(member.getId(), role.getId()).get();
@@ -77,7 +68,6 @@ public class ServerMemberRoleService {
         return saved;
     }
 
-    /** Удаляет роль у участника сервера. */
     @Transactional
     public void removeRoleFromMember(Long memberId, Long roleId) {
         ServerMemberRole memberRole = serverMemberRoleRepository.findByMemberIdAndRoleId(memberId, roleId)
@@ -87,14 +77,12 @@ public class ServerMemberRoleService {
         serverMemberRoleRepository.delete(memberRole);
     }
 
-    /** Получает список ролей участника (идентификаторы ролей). */
     public List<Long> getMemberRoleIds(Long memberId) {
         return serverMemberRoleRepository.findByMemberId(memberId).stream()
                 .map(memberRole -> memberRole.getRole().getId())
                 .collect(Collectors.toList());
     }
 
-    /** Проверяет, назначена ли роль участнику. */
     public boolean hasRoleAssigned(Long memberId, Long roleId) {
         return serverMemberRoleRepository.findByMemberIdAndRoleId(memberId, roleId).isPresent();
     }

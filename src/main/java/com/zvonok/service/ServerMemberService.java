@@ -24,36 +24,32 @@ public class ServerMemberService {
     private final ServerMemberRepository serverMemberRepository;
     private final UserService userService;
 
-    /** Получает участника сервера по ID. */
     public ServerMember getServerMember(Long id) {
         return serverMemberRepository.findById(id)
                 .orElseThrow(() -> new ServerMemberNotFoundException(
                         HttpResponseMessage.HTTP_SERVER_MEMBER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
-    /** Получает участника сервера по ID пользователя и ID сервера. */
     public ServerMember getServerMember(Long userId, Long serverId) {
         return serverMemberRepository.findByUserIdAndServerId(userId, serverId)
                 .orElseThrow(() -> new ServerMemberNotFoundException(
                         HttpResponseMessage.HTTP_SERVER_MEMBER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
-    /** Получает активного участника сервера по ID пользователя и сервера. */
+    public ServerMember findServerMemberOrNull(Long userId, Long serverId) {
+        return serverMemberRepository.findByUserIdAndServerId(userId, serverId).orElse(null);
+    }
+
     public ServerMember getActiveServerMember(Long userId, Long serverId) {
         return serverMemberRepository.findByUserIdAndServerIdAndIsActiveTrue(userId, serverId)
                 .orElseThrow(() -> new ServerMemberNotFoundException(
                         HttpResponseMessage.HTTP_SERVER_MEMBER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
-    /** Обновляет участника сервера. */
     public ServerMember updateServerMember(ServerMember serverMember) {
         return serverMemberRepository.save(serverMember);
     }
 
-    /**
-     * Создает нового участника сервера для пользователя.
-     * Пользователь получается по ID, участник создается с правами по умолчанию (NOTHING).
-     */
     public ServerMember createServerMember(Server server, Long userId) {
         User user = userService.getUser(userId);
 
@@ -66,10 +62,6 @@ public class ServerMemberService {
         return serverMemberRepository.save(member);
     }
 
-    /**
-     * Создает нового участника сервера для пользователя.
-     * Сущность пользователя предоставляется напрямую, участник создается с правами по умолчанию (NOTHING).
-     */
     public ServerMember createServerMember(Server server, User user) {
         ServerMember member = new ServerMember();
         member.setUser(user);
@@ -80,17 +72,14 @@ public class ServerMemberService {
         return serverMemberRepository.save(member);
     }
 
-    /** Подсчитывает количество активных участников в сервере. */
     public long countServerMembers(Long serverId) {
         return serverMemberRepository.countByServerIdAndIsActiveTrue(serverId);
     }
 
-    /** Получает всех активных участников сервера. */
     public List<ServerMember> getAllActiveMember(Long serverId) {
         return serverMemberRepository.findByServerIdAndIsActiveTrue(serverId);
     }
 
-    /** Обновляет ник участника сервера. */
     public ServerMember updateNickname(Long memberId, String nickname) {
         ServerMember member = getServerMember(memberId);
         member.setNickname(nickname);

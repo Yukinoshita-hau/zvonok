@@ -28,15 +28,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                // .cors(cors -> cors.configurationSource(request -> {
-                //         CorsConfiguration config = new CorsConfiguration();
-                //         config.setAllowedOrigins(List.of("http://localhost:5173"));
-                //         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                //         config.setAllowedHeaders(List.of("*"));
-                //         config.setAllowCredentials(true);
-                //         config.setMaxAge(3600L);
-                //         return config;
-                // }))
+                .cors(cors -> cors.configurationSource(request -> {
+                        CorsConfiguration config = new CorsConfiguration();
+                        config.setAllowedOrigins(List.of(
+                            "http://localhost:3000",
+                            "http://127.0.0.1:3000",
+                            "http://localhost:5500"
+                        ));
+                        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                        config.setAllowedHeaders(List.of("*"));
+                        config.setAllowCredentials(true);
+                        config.setMaxAge(3600L);
+                        return config;
+                })) 
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -45,15 +49,21 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/api/auth/login",
+                                "/api/auth/register",
+                                "/api/auth/refresh",
+                                "/api/health",
                                 "/auth/login",
                                 "/auth/register",
                                 "/auth/refresh",
                                 "/health",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/ws/**",
+                                "/ws-raw/**"
                         ).permitAll()
-                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/ws/**", "/api/ws/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .build();

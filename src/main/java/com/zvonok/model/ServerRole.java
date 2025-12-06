@@ -1,5 +1,6 @@
 package com.zvonok.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.zvonok.service.dto.Permission;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -42,11 +43,14 @@ public class ServerRole {
     private Server server;
 
     @OneToMany(mappedBy = "role")
+    @JsonIgnore
     private List<ServerMemberRole> memberRoles;
 
     @OneToMany(mappedBy = "role")
+    @JsonIgnore
     private List<FolderPermissionOverride> folderOverrides;
 
     @OneToMany(mappedBy = "role")
+    @JsonIgnore
     private List<ChannelPermissionOverride> channelOverrides;
 }

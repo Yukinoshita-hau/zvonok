@@ -26,14 +26,12 @@ public class ServerRoleService {
 
     private final ServerRoleRepository serverRoleRepository;
 
-    /** Получает роль сервера по ID. */
     public ServerRole getServerRole(Long id) {
         return serverRoleRepository.findById(id)
                 .orElseThrow(() -> new ServerRoleNotFoundException(
                         HttpResponseMessage.HTTP_SERVER_ROLE_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
-    /** Создает новую роль сервера. */
     public ServerRole createServerRole(CreateServerRoleDto createServerRoleDto) {
         ServerRole role = new ServerRole();
         role.setName(createServerRoleDto.getName());
@@ -48,29 +46,22 @@ public class ServerRoleService {
         return serverRoleRepository.save(role);
     }
 
-    /**
-     * Получает роль "everyone" по умолчанию для сервера.
-     * Роль "everyone" назначается всем новым участникам по умолчанию.
-     */
     public ServerRole getServerRoleWithIsEveryoneTrue(Long serverId) {
         return serverRoleRepository.findByServerIdAndIsEveryoneTrue(serverId)
                 .orElseThrow(() -> new ServerRoleNotFoundException(
                         HttpResponseMessage.HTTP_SERVER_ROLE_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
-    /** Получает все активные роли сервера. */
     public List<ServerRole> getActiveServerRoles(Long serverId) {
         return serverRoleRepository.findByServerIdAndIsActiveTrueOrderByPositionDesc(serverId);
     }
 
-    /** Получает роль по ID, проверяя принадлежность серверу. */
     public ServerRole getServerRoleForServer(Long serverId, Long roleId) {
         return serverRoleRepository.findByIdAndServerId(roleId, serverId)
                 .orElseThrow(() -> new ServerRoleNotFoundException(
                         HttpResponseMessage.HTTP_SERVER_ROLE_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
-    /** Обновляет существующую роль сервера. */
     @Transactional
     public ServerRole updateServerRole(Long roleId, UpdateServerRoleDto updateServerRoleDto) {
         ServerRole role = getServerRole(roleId);
@@ -101,7 +92,6 @@ public class ServerRoleService {
         return serverRoleRepository.save(role);
     }
 
-    /** Помечает роль как неактивную. */
     @Transactional
     public void deleteServerRole(Long roleId) {
         ServerRole role = getServerRole(roleId);

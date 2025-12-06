@@ -35,13 +35,6 @@ public class ChannelFolderController {
     private final UserService userService;
     private final ServerService serverService;
 
-    /**
-     * Возвращает список активных папок канала для сервера.
-     *
-     * @param serverId   идентификатор сервера
-     * @param principal  текущий пользователь (используется для проверки членства)
-     * @return список активных папок
-     */
     @GetMapping
     public ResponseEntity<List<ChannelFolder>> getChannelFolders(
             @PathVariable Long serverId,
@@ -55,14 +48,6 @@ public class ChannelFolderController {
         return ResponseEntity.ok(folders);
     }
 
-    /**
-     * Создаёт новую папку каналов внутри сервера.
-     *
-     * @param serverId               идентификатор сервера
-     * @param createChannelFolderDto параметры новой папки
-     * @param principal              текущий пользователь
-     * @return созданная сущность папки
-     */
     @PostMapping
     public ResponseEntity<ChannelFolder> createChannelFolder(
             @PathVariable Long serverId,
@@ -78,15 +63,6 @@ public class ChannelFolderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(folder);
     }
 
-    /**
-     * Обновляет свойства папки (название, позицию, флаги активности).
-     *
-     * @param serverId                идентификатор сервера
-     * @param folderId                идентификатор папки
-     * @param updateChannelFolderDto  данные для обновления
-     * @param principal               текущий пользователь
-     * @return обновлённая папка
-     */
     @PutMapping("/{folderId}")
     public ResponseEntity<ChannelFolder> updateChannelFolder(
             @PathVariable Long serverId,
@@ -103,14 +79,6 @@ public class ChannelFolderController {
         return ResponseEntity.ok(updated);
     }
 
-    /**
-     * Помечает папку и все входящие в неё каналы как неактивные.
-     *
-     * @param serverId   идентификатор сервера
-     * @param folderId   идентификатор папки
-     * @param principal  текущий пользователь
-     * @return пустой ответ со статусом {@code 204}
-     */
     @DeleteMapping("/{folderId}")
     public ResponseEntity<Void> deleteChannelFolder(
             @PathVariable Long serverId,

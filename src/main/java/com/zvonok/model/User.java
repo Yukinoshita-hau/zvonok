@@ -49,8 +49,7 @@ public class User {
     private LocalDateTime updatedAt;
 
     @CreationTimestamp
-    @Column(name = "create_at")
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "user")
     private List<ServerMember> serverMemberships;

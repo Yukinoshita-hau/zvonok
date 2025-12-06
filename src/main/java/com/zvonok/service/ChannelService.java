@@ -7,7 +7,6 @@ import com.zvonok.model.ChannelFolder;
 import com.zvonok.repository.ChannelRepository;
 import com.zvonok.service.dto.CreateChannelDto;
 import com.zvonok.service.dto.UpdateChannelDto;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -32,22 +31,16 @@ public class ChannelService {
         this.channelFolderService = channelFolderService;
     }
 
-    /** Получает канал по ID. */
     public Channel getChannel(long id) {
         return channelRepository.findById(id)
                 .orElseThrow(() -> new ChannelNotFoundException(
                         HttpResponseMessage.HTTP_CHANNEL_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
-    /** Получает все активные каналы в указанной папке. */
     public List<Channel> getChannelsByFolderId(Long folderId) {
         return channelRepository.findByFolderIdAndIsActiveTrue(folderId);
     }
 
-    /**
-     * Создает новый канал в папке.
-     * Проверяет существование папки перед созданием канала.
-     */
     public Channel createChannel(CreateChannelDto createChannelDto) {
         ChannelFolder folder = channelFolderService.getChannelFolder(createChannelDto.getFolderId());
 
@@ -63,7 +56,6 @@ public class ChannelService {
         return channelRepository.save(channel);
     }
 
-    /** Обновляет существующий канал. */
     public Channel updateChannel(Long channelId, UpdateChannelDto updateChannelDto) {
         Channel channel = getChannel(channelId);
 
@@ -95,21 +87,18 @@ public class ChannelService {
         return channelRepository.save(channel);
     }
 
-    /** Помечает канал как удаленный (неактивный). */
     public void deleteChannel(Long channelId) {
         Channel channel = getChannel(channelId);
         channel.setIsActive(false);
         channelRepository.save(channel);
     }
 
-    /** Получает канал по ID и ID папки. */
     public Channel getChannel(Long folderId, Long channelId) {
         return channelRepository.findByIdAndFolderId(channelId, folderId)
                 .orElseThrow(() -> new ChannelNotFoundException(
                         HttpResponseMessage.HTTP_CHANNEL_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
-    /** Получает все активные каналы, отсортированные по позиции для папки. */
     public List<Channel> getChannelsOrdered(Long folderId) {
         return channelRepository.findByFolderIdOrderByPosition(folderId).stream()
                 .filter(Channel::getIsActive)

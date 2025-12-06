@@ -23,9 +23,6 @@ public class JwtTokenProvider {
 
     // ===== УЛУЧШЕННАЯ ВЕРСИЯ С USERID =====
 
-    /**
-     * Создание токена с username и userId
-     */
     public String generateToken(String username, Long userId) {
         return Jwts.builder()
                 .setSubject(username)
@@ -36,17 +33,11 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    /**
-     * Извлечение username из токена
-     */
     public String getUsername(String token) {
         Claims claims = getClaims(token);
         return claims.getSubject();
     }
 
-    /**
-     * Проверка валидности токена
-     */
     public boolean isValidToken(String token) {
         try {
             getClaims(token);

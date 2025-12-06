@@ -2,14 +2,12 @@ package com.zvonok.service;
 
 import com.zvonok.exception.ServerBanNotFoundException;
 import com.zvonok.exception.ServerMemberNotFoundException;
-import com.zvonok.exception.ServerNotFoundException;
 import com.zvonok.exception_handler.enumeration.HttpResponseMessage;
 import com.zvonok.model.Server;
 import com.zvonok.model.ServerBan;
 import com.zvonok.model.ServerMember;
 import com.zvonok.model.User;
 import com.zvonok.repository.ServerBanRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +36,6 @@ public class ServerBanService {
         this.serverMemberService = serverMemberService;
     }
 
-    /** Проверяет, забанен ли пользователь на сервере. */
     @Transactional
     public boolean isUserBanned(Long serverId, Long userId) {
         Optional<ServerBan> optionalBan = serverBanRepository.findByServerIdAndUserIdAndActiveTrue(serverId, userId);
@@ -56,7 +53,6 @@ public class ServerBanService {
         return true;
     }
 
-    /** Возвращает список активных банов сервера. */
     @Transactional
     public List<ServerBan> getActiveBans(Long serverId) {
         List<ServerBan> bans = serverBanRepository.findByServerIdAndActiveTrue(serverId);
@@ -71,7 +67,6 @@ public class ServerBanService {
                 .collect(Collectors.toList());
     }
 
-    /** Создает бан для пользователя на сервере. */
     @Transactional
     public ServerBan banUser(Long serverId, Long targetUserId, Long actorUserId, String reason, LocalDateTime expiresAt) {
         Server server = serverService.getServer(serverId);
@@ -106,7 +101,6 @@ public class ServerBanService {
         return savedBan;
     }
 
-    /** Снимает бан с пользователя. */
     @Transactional
     public void unbanUser(Long serverId, Long targetUserId, Long actorUserId) {
         ServerBan ban = serverBanRepository.findByServerIdAndUserIdAndActiveTrue(serverId, targetUserId)

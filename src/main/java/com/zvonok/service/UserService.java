@@ -30,8 +30,9 @@ public class UserService {
                         HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
-    public User getUser(String username) {
-        return userRepository.findByUsername(username)
+    public User getUser(String usernameOrEmail) {
+        // Ищем и по username и по email для гибкости
+        return userRepository.findByUsernameOrEmail(usernameOrEmail)
                 .orElseThrow(() -> new UserNotFoundException(
                         HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
@@ -42,10 +43,6 @@ public class UserService {
                         HttpResponseMessage.HTTP_USER_NOT_FOUND_RESPONSE_MESSAGE.getMessage()));
     }
 
-    /**
-     * Создает нового пользователя.
-     * Creates a new user.
-     */
     @Transactional
     public User createUser(CreateUserDto userDto) {
         userRepository.findByUsername(userDto.getUsername())
@@ -68,10 +65,6 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    /**
-     * Обновляет данные пользователя.
-     * Updates user data.
-     */
     @Transactional
     public User updateUser(Long id, UpdateUserDto userDto) {
         User user = getUser(id);
@@ -103,20 +96,12 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    /**
-     * Удаляет пользователя по ID.
-     * Deletes a user by ID.
-     */
     @Transactional
     public void deleteUser(Long id) {
         User user = getUser(id);
         userRepository.delete(user);
     }
 
-    /**
-     * Обновляет время последней активности пользователя.
-     * Updates user's last seen timestamp.
-     */
     @Transactional
     public void updateLastSeenAt(Long userId, LocalDateTime lastSeenAt) {
         User user = getUser(userId);
@@ -124,10 +109,6 @@ public class UserService {
         userRepository.save(user);
     }
 
-    /**
-     * Обновляет время последней активности пользователя (перегруженный метод для username).
-     * Updates user's last seen timestamp (overloaded method for username).
-     */
     @Transactional
     public void updateLastSeenAt(String username, LocalDateTime lastSeenAt) {
         User user = getUser(username);

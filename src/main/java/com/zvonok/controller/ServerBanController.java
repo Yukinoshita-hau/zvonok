@@ -38,13 +38,6 @@ public class ServerBanController {
     private final ServerService serverService;
     private final UserService userService;
 
-    /**
-     * Возвращает активные баны сервера.
-     *
-     * @param serverId  идентификатор сервера
-     * @param principal текущий пользователь
-     * @return список банов
-     */
     @GetMapping
     public ResponseEntity<List<ServerBanResponse>> getServerBans(
             @PathVariable Long serverId,
@@ -60,14 +53,6 @@ public class ServerBanController {
         return ResponseEntity.ok(responses);
     }
 
-    /**
-     * Создаёт или обновляет бан пользователя.
-     *
-     * @param serverId  идентификатор сервера
-     * @param request   параметры бана
-     * @param principal текущий пользователь
-     * @return созданный/обновлённый бан
-     */
     @PostMapping
     public ResponseEntity<ServerBanResponse> banUser(
             @PathVariable Long serverId,
@@ -91,14 +76,6 @@ public class ServerBanController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(ban));
     }
 
-    /**
-     * Снимает активный бан пользователя.
-     *
-     * @param serverId      идентификатор сервера
-     * @param targetUserId  идентификатор пользователя
-     * @param principal     текущий пользователь
-     * @return пустой ответ {@code 204}
-     */
     @DeleteMapping("/{targetUserId}")
     public ResponseEntity<Void> unbanUser(
             @PathVariable Long serverId,

@@ -65,22 +65,6 @@ public class ServerService {
         this.serverBanService = serverBanService;
     }
 
-    /**
-     * Creates a new server with default roles, channels, and adds the owner as a member.
-     * Creates default "everyone" and "owner" roles, adds owner as a member with owner role,
-     * and creates default channel folder with text and voice channels.
-     *
-     * Создает новый сервер с ролями по умолчанию, каналами и добавляет владельца в качестве участника.
-     * Создает роли "everyone" и "owner" по умолчанию, добавляет владельца как участника с ролью владельца,
-     * и создает папку каналов по умолчанию с текстовым и голосовым каналами.
-     *
-     * @param request  the request containing server creation data
-     *                 запрос, содержащий данные для создания сервера
-     * @param ownerId  the ID of the user who will be the server owner
-     *                 идентификатор пользователя, который будет владельцем сервера
-     * @return ServerResponse containing the created server information
-     *         ответ, содержащий информацию о созданном сервере
-     */
     @Transactional
     public ServerResponse createServer(CreateServerRequest request, Long ownerId) {
         User owner = userService.getUser(ownerId);
@@ -110,13 +94,11 @@ public class ServerService {
         return mapToResponse(savedServer);
     }
 
-    /** Получает сервер по ID. */
     public Server getServer(Long serverId) {
         return serverRepository.findById(serverId)
                 .orElseThrow(() -> new ServerNotFoundException("Сервер не найден с ID: " + serverId));
     }
 
-    /** Получает все серверы, участником которых является пользователь. */
     public List<ServerResponse> getUserServers(Long userId) {
         List<Server> servers = serverRepository.findServersByUserId(userId);
         return servers.stream()
@@ -124,15 +106,10 @@ public class ServerService {
                 .collect(Collectors.toList());
     }
 
-    /** Проверяет, имеет ли пользователь доступ к серверу (является ли участником). */
     public boolean hasAccessToServer(Long userId, Long serverId) {
         return permissionService.isServerMember(userId, serverId);
     }
 
-    /**
-     * Проверяет доступ пользователя к серверу и выбрасывает исключение, если нет.
-     * Используется для проверки контроля доступа.
-     */
     public void hasAccessToServerAndThrowExceptionIfFalse(Long userId, Long serverId) {
         if (!hasAccessToServer(userId, serverId)) {
             throw new InsufficientPermissionsException(
@@ -140,32 +117,11 @@ public class ServerService {
         }
     }
 
-    /** Получает DTO ответа сервера по ID сервера. */
     public ServerResponse getServerResponse(Long serverId) {
         Server server = getServer(serverId);
         return mapToResponse(server);
     }
 
-    /**
-     * Allows a user to join a server using an invite code.
-     * Validates the invite code, checks server status, member limit, and adds the user as a member
-     * with the default "everyone" role. If the user is already a member, returns the server response.
-     *
-     * Позволяет пользователю присоединиться к серверу, используя код приглашения.
-     * Проверяет код приглашения, статус сервера, лимит участников и добавляет пользователя как участника
-     * с ролью "everyone" по умолчанию. Если пользователь уже является участником, возвращает ответ сервера.
-     *
-     * @param inviteCode  the invite code for the server
-     *                    код приглашения для сервера
-     * @param userId      the unique identifier of the user joining the server
-     *                    уникальный идентификатор пользователя, присоединяющегося к серверу
-     * @return ServerResponse containing the server information
-     *         ответ, содержащий информацию о сервере
-     * @throws ServerNotFoundException  if server with the invite code does not exist or is not active
-     *                                  если сервер с кодом приглашения не существует или не активен
-     * @throws ServerMemberLimitReachedException if the server has reached the maximum member limit
-     *                                           если сервер достиг максимального лимита участников
-     */
     @Transactional
     public ServerResponse joinServerByInviteCode(String inviteCode, Long userId) {
         Server server = serverRepository.findByInvitedCode(inviteCode)
@@ -206,31 +162,11 @@ public class ServerService {
         return mapToResponse(server);
     }
 
-    /** Проверяет, является ли пользователь участником указанного сервера. */
     public boolean isServerMember(Long userId, Server server) {
-        return serverMemberService.getServerMember(userId, server.getId()) != null;
+        ServerMember member = serverMemberService.findServerMemberOrNull(userId, server.getId());
+        return member != null && member.getIsActive();
     }
 
-    /**
-     * Updates server information such as name and maximum member count.
-     * Requires MANAGE_SERVER permission or server ownership.
-     *
-     * Обновляет информацию о сервере, такую как название и максимальное количество участников.
-     * Требует права MANAGE_SERVER или владения сервером.
-     *
-     * @param serverId  the unique identifier of the server to update
-     *                  уникальный идентификатор сервера для обновления
-     * @param request   the request containing updated server data (name, maxMembers)
-     *                  запрос, содержащий обновленные данные сервера (название, максимальное количество участников)
-     * @param userId    the unique identifier of the user performing the update
-     *                  уникальный идентификатор пользователя, выполняющего обновление
-     * @return ServerResponse containing the updated server information
-     *         ответ, содержащий обновленную информацию о сервере
-     * @throws ServerNotFoundException        if server with the given ID does not exist
-     *                                        если сервер с указанным идентификатором не существует
-     * @throws InsufficientPermissionsException if user lacks permission to manage the server
-     *                                          если у пользователя недостаточно прав для управления сервером
-     */
     @Transactional
     public ServerResponse updateServer(Long serverId, UpdateServerRequest request, Long userId) {
         Server server = getServer(serverId);
@@ -253,26 +189,6 @@ public class ServerService {
         return mapToResponse(updatedServer);
     }
 
-    /**
-     * Regenerates the invite code for a server.
-     * Generates a new unique invite code and replaces the old one.
-     * Requires MANAGE_SERVER permission or server ownership.
-     *
-     * Регенерирует код приглашения для сервера.
-     * Генерирует новый уникальный код приглашения и заменяет старый.
-     * Требует права MANAGE_SERVER или владения сервером.
-     *
-     * @param serverId  the unique identifier of the server
-     *                  уникальный идентификатор сервера
-     * @param userId    the unique identifier of the user performing the regeneration
-     *                  уникальный идентификатор пользователя, выполняющего регенерацию
-     * @return the newly generated invite code
-     *         новый сгенерированный код приглашения
-     * @throws ServerNotFoundException        if server with the given ID does not exist
-     *                                        если сервер с указанным идентификатором не существует
-     * @throws InsufficientPermissionsException if user lacks permission to manage the server
-     *                                          если у пользователя недостаточно прав для управления сервером
-     */
     @Transactional
     public String regenerateInviteCode(Long serverId, Long userId) {
         Server server = getServer(serverId);
@@ -289,24 +205,6 @@ public class ServerService {
         return newInviteCode;
     }
 
-    /**
-     * Allows a user to leave a server.
-     * Marks the server member as inactive and sets the leave timestamp.
-     * Server owners cannot leave their own servers.
-     *
-     * Позволяет пользователю покинуть сервер.
-     * Помечает участника сервера как неактивного и устанавливает время выхода.
-     * Владельцы серверов не могут покинуть свои серверы.
-     *
-     * @param serverId  the unique identifier of the server to leave
-     *                  уникальный идентификатор сервера, который нужно покинуть
-     * @param userId    the unique identifier of the user leaving the server
-     *                  уникальный идентификатор пользователя, покидающего сервер
-     * @throws ServerNotFoundException        if server with the given ID does not exist
-     *                                        если сервер с указанным идентификатором не существует
-     * @throws OwnerCanNotLeaveServerException if the user is the server owner
-     *                                         если пользователь является владельцем сервера
-     */
     @Transactional
     public void leaveServer(Long serverId, Long userId) {
         Server server = getServer(serverId);
@@ -325,24 +223,6 @@ public class ServerService {
 
     }
 
-    /**
-     * Retrieves all active members of a server.
-     * Only server members can view the member list.
-     *
-     * Получает всех активных участников сервера.
-     * Только участники сервера могут просматривать список участников.
-     *
-     * @param serverId  the unique identifier of the server
-     *                  уникальный идентификатор сервера
-     * @param userId    the unique identifier of the user requesting the member list
-     *                  уникальный идентификатор пользователя, запрашивающего список участников
-     * @return List of ServerMemberResponse objects containing member information
-     *         список объектов ServerMemberResponse, содержащих информацию об участниках
-     * @throws ServerNotFoundException        if server with the given ID does not exist
-     *                                        если сервер с указанным идентификатором не существует
-     * @throws InsufficientPermissionsException if user is not a server member
-     *                                          если пользователь не является участником сервера
-     */
     public List<ServerMemberResponse> getServerMembers(Long serverId, Long userId) {
         // Проверяем может ли пользователь видеть участников
         if (!canViewMembers(userId, serverId)) {
@@ -356,32 +236,6 @@ public class ServerService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Kicks a member from the server.
-     * Marks the member as inactive and sets the leave timestamp.
-     * Requires KICK_MEMBERS permission or server ownership.
-     * Cannot kick the server owner or yourself.
-     *
-     * Исключает участника из сервера.
-     * Помечает участника как неактивного и устанавливает время выхода.
-     * Требует права KICK_MEMBERS или владения сервером.
-     * Нельзя исключить владельца сервера или самого себя.
-     *
-     * @param serverId    the unique identifier of the server
-     *                    уникальный идентификатор сервера
-     * @param targetUserId the unique identifier of the user to be kicked
-     *                     уникальный идентификатор пользователя, которого нужно исключить
-     * @param kickerUserId the unique identifier of the user performing the kick
-     *                     уникальный идентификатор пользователя, выполняющего исключение
-     * @throws ServerNotFoundException        if server with the given ID does not exist
-     *                                        если сервер с указанным идентификатором не существует
-     * @throws InsufficientPermissionsException if kicker lacks permission to kick members
-     *                                          если у исключающего недостаточно прав для исключения участников
-     * @throws CannotKickServerOwnerException if attempting to kick the server owner
-     *                                        если попытка исключить владельца сервера
-     * @throws CannotKickYourselfException    if attempting to kick yourself
-     *                                        если попытка исключить самого себя
-     */
     @Transactional
     public void kickMember(Long serverId, Long targetUserId, Long kickerUserId) {
         Server server = getServer(serverId);
@@ -412,10 +266,6 @@ public class ServerService {
 
     }
 
-    /**
-     * Обновляет ник участника сервера.
-     * Участник может изменить свой собственный ник, а также это могут делать пользователи с правами управления сервером.
-     */
     @Transactional
     public ServerMemberResponse updateMemberNickname(Long serverId, Long targetUserId, String nickname, Long actorUserId) {
         // Убедимся, что сервер существует
@@ -520,7 +370,8 @@ public class ServerService {
     }
 
     private boolean canViewMembers(Long userId, Long serverId) {
-        return serverMemberService.getServerMember(userId, serverId) != null;
+        ServerMember member = serverMemberService.findServerMemberOrNull(userId, serverId);
+        return member != null && member.getIsActive();
     }
 
     private boolean canKickMembers(Long userId, Long serverId) {
@@ -530,7 +381,6 @@ public class ServerService {
 
     // ===== MAPPING METHODS =====
 
-    /** Преобразует сущность Server в DTO ServerResponse. */
     public ServerResponse mapToResponse(Server server) {
         return ServerResponse.builder()
                 .id(server.getId())
@@ -561,10 +411,6 @@ public class ServerService {
                 .build();
     }
 
-    /**
-     * Удаляет сервер. Только владелец может удалить сервер.
-     * Deletes a server. Only the owner can delete the server.
-     */
     @Transactional
     public void deleteServer(Long serverId, Long userId) {
         Server server = getServer(serverId);

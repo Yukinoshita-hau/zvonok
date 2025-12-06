@@ -1,5 +1,6 @@
 package com.zvonok.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.zvonok.service.dto.Permission;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,7 @@ public class ServerMember {
     private Server server;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<ServerMemberRole> memberRoles = new ArrayList<>();
 
     private Long personalPermissions = Permission.NOTHING.getValue();
