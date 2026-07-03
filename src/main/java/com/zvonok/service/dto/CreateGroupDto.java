@@ -21,6 +21,5 @@ public class CreateGroupDto {
 			example = "[\"murat\", \"aliya\", \"timur\"]", nullable = false,
 			requiredMode = Schema.RequiredMode.REQUIRED)
 		@NotNull
-		@Size(min = 2, message = "Room size must be at least 2 member")
 	private List<String> roomMemberUsernames;
 }

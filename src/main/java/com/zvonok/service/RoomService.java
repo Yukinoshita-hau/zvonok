@@ -130,7 +130,7 @@ public class RoomService {
 
 		members.add(creator);
 
-		if (members.size() < 3) {
+		if (members.size() < 1) {
 			throw new InvalidRoomSizeException(
 					HttpResponseMessage.HTTP_INVALID_ROOM_SIZE_RESPONSE_MESSAGE.getMessage());
 		}
