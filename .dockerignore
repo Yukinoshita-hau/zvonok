@@ -9,3 +9,5 @@ README.md
 HELP.md
 docker-compose.yml
 .env
+agent
+./agent
